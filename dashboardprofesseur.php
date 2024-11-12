@@ -193,12 +193,12 @@ session_start();
                 <p>Accéder aux classes où vous enseignez</p>
             </div></a>
             
-            <div class="dashboard-card" >
+            <a href="ajouter_note.php" style="text-decoration:none;"><div class="dashboard-card" >
                 <i class="fas fa-user-edit"></i>
                 <h5>Entrer les Notes</h5>
                 <p>Ajouter des notes pour chaque élève</p>
             </div>
-            
+            </a>
             
         </div>
     </div>
