@@ -9,10 +9,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css"> 
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+     <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
     <style>
         /* Styles de base */
         body {
-            background-image: url('images/12a57d88ed03d765ddd2fda27ee8d399.jpg');
+            background-image: url('images/fotor-ai-20241112125339.jpg');
             background-size: cover;
             background-position: center;
             display: flex;
@@ -78,19 +83,26 @@
     </style>
 </head>
 <body>
+    
     <!-- Flou arrière-plan -->
-    <div class="overlay"></div>
+    <div class="overlay" data-aos="flip-left"   data-aos-duration="1000"></div>
 
-    <div class="content">
-        <h1 class="display-4" style="font-size: 3rem;">Bienvenue sur <span style="font-size: 3.5rem; font-family: calibri; color: orangered;" > My Cjm App</span>  <i class="bi bi-back" style="font-size: 2.5rem;"></i></h1><br>
-        <p class="lead" style="font-size:1.1rem; font-family: lora, monospace;" >Démarrez une aventure époustouflante. <i class="bi bi-balloon-heart-fill" style="color:red"></i></p>
+    <div class="content" data-aos="fade-up"  data-aos-duration="2000">
+        <h1 class="animate__animated animate__swing" style="font-size: 3rem;">Bienvenue sur <span style="font-size: 3.5rem; font-family: calibri; color: orangered;" > My Cjm App</span>  <i class="bi bi-back" style="font-size: 2.5rem;"></i></h1><br>
+        <div data-aos="fade-right">
+            <p class="lead" style="font-size:1.1rem; font-family: lora, monospace;" >Démarrez une aventure époustouflante. <i class="bi bi-balloon-heart-fill" style="color:red"></i></p>
+            </div>
         <br>
         
         <!-- Bouton animé de démarrage -->
-        <a href="index.php" class="btn btn-start" style="font-family: lora,monospace;">Démarrer <i class="bi bi-arrow-right-short"></i></a>
+        <a href="index.php" class="btn btn-start" style="font-family: lora,monospace;" >Démarrer <i class="bi bi-arrow-right-short"></i></a>
     </div>
     <!-- Lien vers Bootstrap JS et jQuery -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init();
+</script>

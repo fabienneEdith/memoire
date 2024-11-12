@@ -51,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['supprimer'])) {
     header("Location: " . $_SERVER['PHP_SELF'] . "#table"); 
     exit; 
 } 
-
 // Modification d'un compte 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) { 
     // CSRF Protection
@@ -65,16 +64,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $mot_de_passe = $_POST['mot_de_passe'] ? ($_POST['mot_de_passe']) : null; 
     $role = $_POST['role']; 
 
-    try { 
-        $sql = "UPDATE utilisateur SET matricule = :nouveauMatricule, email = :email, role = :role" . ($mot_de_passe ? ", mot_de_passe = :mot_de_passe" : "") . " WHERE matricule = :matriculeActuel"; 
-        $stmt = $pdo->prepare($sql); 
-        $params = ['nouveauMatricule' => $nouveauMatricule, 'email' => $email, 'matriculeActuel' => $matriculeActuel, 'role' => $role]; 
-        if ($mot_de_passe) { 
-            $params['mot_de_passe'] = $mot_de_passe; 
-        } 
-        $stmt->execute($params); 
-    } catch (PDOException $e) { 
-        $messageErreur = "Erreur : Impossible de mettre à jour l'utilisateur."; 
+    // Vérification de doublon pour matricule et email
+    $sqlCheck = "SELECT * FROM utilisateur WHERE (matricule = :matricule OR email = :email) AND matricule != :matriculeActuel";
+    $stmtCheck = $pdo->prepare($sqlCheck);
+    $stmtCheck->execute(['matricule' => $nouveauMatricule, 'email' => $email, 'matriculeActuel' => $matriculeActuel]);
+    $doublon = $stmtCheck->fetch();
+
+    if ($doublon) {
+        $messageErreur = "Erreur : Le matricule ou l'email est déjà attribué à un autre utilisateur.";
+    } else {
+        try { 
+            $sql = "UPDATE utilisateur SET matricule = :nouveauMatricule, email = :email, role = :role" . ($mot_de_passe ? ", mot_de_passe = :mot_de_passe" : "") . " WHERE matricule = :matriculeActuel"; 
+            $stmt = $pdo->prepare($sql); 
+            $params = ['nouveauMatricule' => $nouveauMatricule, 'email' => $email, 'matriculeActuel' => $matriculeActuel, 'role' => $role]; 
+            if ($mot_de_passe) { 
+                $params['mot_de_passe'] = $mot_de_passe; 
+            } 
+            $stmt->execute($params); 
+        } catch (PDOException $e) { 
+            $messageErreur = "Erreur : Impossible de mettre à jour l'utilisateur."; 
+        }
     }
 }
 

@@ -227,4 +227,9 @@
         </div>
     </div>
 </body>
+<footer style="background-color:lavenderblush; ">
+        
+            <p align="center">Droits d'auteur © 2024. <span style="color:red;">C J M </span>Tous droits réservés. </p>
+        
+    </footer>
 </html>

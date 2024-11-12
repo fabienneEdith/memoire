@@ -49,13 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
             echo "<script>alert('Le matricule n\'existe pas ou n\'a pas le rôle de Professeur.');</script>";
         } else {
             // Vérifier si le matricule existe déjà dans la table professeur (à part pour le professeur actuel)
-            $sqlCheckProf = "SELECT * FROM professeur WHERE matricule_professeur = :matricule AND id_professeur != :id_professeur";
-            $stmtCheckProf = $pdo->prepare($sqlCheckProf);
-            $stmtCheckProf->execute(['matricule' => $matriculeProf, 'id_professeur' => $professeurId]);
+           
             
-            if ($stmtCheckProf->rowCount() > 0) {
-                echo "<script>alert('Le matricule existe déjà dans la base de données pour un autre professeur.');</script>";
-            } else {
                 // Vérifier si le professeur est déjà attribué à cette classe et matière
                 $sqlCheckAttribution = "SELECT * FROM professeur WHERE classe_attribuee = :classe_attribuee AND matiere_enseignee = :matiere_enseignee AND id_professeur != :id_professeur";
                 $stmtCheckAttribution = $pdo->prepare($sqlCheckAttribution);
@@ -88,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier'])) {
     } else {
         echo "<script>alert('Veuillez remplir tous les champs obligatoires.');</script>";
     }
-}
+
 
 ?>
 

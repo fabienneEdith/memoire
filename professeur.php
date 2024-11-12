@@ -72,11 +72,13 @@ if (isset($_GET['delete_id'])) {
     echo "<script>alert('Professeur supprimé avec succès.'); window.location.href='professeur.php';</script>";
 }
 
-// Fetch professors for display
 $sqlProfessors = "SELECT p.*, c.nom_classe, m.nom_matiere 
-                  FROM professeur AS p
-                  INNER JOIN classe AS c ON p.classe_attribuee = c.id_classe
-                  INNER JOIN matiere AS m ON p.matiere_enseignee = m.id_matiere";
+FROM professeur AS p
+INNER JOIN classe AS c ON p.classe_attribuee = c.id_classe
+INNER JOIN matiere AS m ON p.matiere_enseignee = m.id_matiere";
+
+
+
 $stmtProfessors = $pdo->query($sqlProfessors);
 $professeurs = $stmtProfessors->fetchAll();
 
@@ -198,8 +200,9 @@ $professeurs = $stmtProfessors->fetchAll();
                         <td><?= htmlspecialchars($professeur['nom_professeur']) ?></td>
                         <td><?= htmlspecialchars($professeur['prenoms_professeur']) ?></td>
                         <td><?= htmlspecialchars($professeur['sexe_prof']) ?></td>
-                        <td><?= htmlspecialchars($professeur['nom_classe']) ?></td>
+                        <<td><?= htmlspecialchars($professeur['nom_classe']) ?></td>
                         <td><?= htmlspecialchars($professeur['nom_matiere']) ?></td>
+
                         <td>
     <a href="modifier_professeur.php?id=<?= $professeur['id_professeur'] ?>" class="btn btn-warning">
         <i class="fas fa-edit"></i> Modifier

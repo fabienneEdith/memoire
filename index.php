@@ -86,7 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connexion'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css"> 
-
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+     <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
     <style>
         body {
             background-color:  ;
@@ -228,16 +232,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connexion'])) {
 <body>
     <br><br>
     <div id="welcome-banner" class="text-center fixed-top">
-        <h2 class="typewriter">  My App CJM </h2> 
+        <h2 class="animate__animated animate__rubberBand">  My App CJM </h2> 
     </div><br>
 
-    <div class="container-fluid d-flex justify-content-end align-items-center"style="margin-top: 50px;">
-        <div class="login-container p-5 rounded">
+    <div class="container-fluid d-flex justify-content-end align-items-center"style="margin-top: 50px;" >
+        <div class="login-container p-5 rounded" >
 
-            <form method="POST" action="index.php">
+            <form method="POST" action="index.php"  >
 
-                <div class="form-group">
-                    <h5 class="text-center mb-4" style="font-family: 'Calibri';">Bonjour ! Démarrons. <i class="bi bi-rocket-takeoff"></i></h5>
+                <div class="form-group" >
+                    <h5  style="font-family: 'Calibri';"  class="animate__animated animate__bounce">Bonjour ! Démarrons. <i class="bi bi-rocket-takeoff"></i></h5>
                     <hr class="custom-line">
                     <center><p class="typewriter" style="opacity: 0.5">Connectez-vous.<i class="bi bi-pc-display-horizontal"></i></p></center>
 
@@ -283,6 +287,9 @@ function() {
 <?php endif; ?>
         
     </script>
-
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init();
+</script>
 </body>
 </html>
