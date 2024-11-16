@@ -1,4 +1,4 @@
-<?php  
+<?php 
 session_start();
 include('config.php');
 
@@ -29,12 +29,15 @@ $stmt->execute();
 $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $trimestres = ['Premier Trimestre', 'Deuxième Trimestre', 'Troisième Trimestre'];
+
+// Réinitialiser les moyennes et rangs pour la classe sélectionnée
 if ($classe_id && $trimestre) {
     $query = "UPDATE eleve SET moyenne = NULL, rang = NULL WHERE id_classe = :classe_id";
     $stmt = $pdo->prepare($query);
     $stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
     $stmt->execute();
 }
+
 
 if (isset($_POST['enregistrer']) && isset($_POST['notes']) && !empty($_POST['notes'])) {
     $notes = $_POST['notes']; // Tableau associatif : id_eleve => note
@@ -68,7 +71,6 @@ if (isset($_POST['enregistrer']) && isset($_POST['notes']) && !empty($_POST['not
         }
     }
 
-
     // If there were invalid notes, display the error message and stop further processing
     if (!$allValid) {
         $invalidList = implode(', ', $invalidStudents);
@@ -92,82 +94,47 @@ if (isset($_POST['enregistrer']) && isset($_POST['notes']) && !empty($_POST['not
 
 }
 
-
-// Calcul des moyennes et des rangs
-if (isset($_POST['calculer_moyenne']) && $classe_id && $trimestre) {
-    // Vérifier s'il y a des notes enregistrées pour la classe et le trimestre
-    $query = "SELECT COUNT(*) FROM note WHERE trimestre = :trimestre AND id_eleve IN (SELECT id_eleve FROM eleve WHERE id_classe = :classe_id)";
+    // Calcul des moyennes et des rangs
+  if (isset($_POST['calculer_moyenne']) && $classe_id && $trimestre) {
+    // Calcul des moyennes pour chaque élève
+    $query = "UPDATE eleve e
+              JOIN (
+                  SELECT id_eleve, AVG(note) AS moyenne_calculee
+                  FROM note
+                  WHERE trimestre = :trimestre
+                  GROUP BY id_eleve
+              ) moyennes
+              ON e.id_eleve = moyennes.id_eleve
+              SET e.moyenne = moyennes.moyenne_calculee
+              WHERE e.id_classe = :classe_id";
     $stmt = $pdo->prepare($query);
     $stmt->bindValue(':trimestre', $trimestre, PDO::PARAM_STR);
     $stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
     $stmt->execute();
-    $noteCount = $stmt->fetchColumn();
 
-    // Si aucune note n'a été saisie, afficher un message
-    if ($noteCount == 0) {
-        echo "<div class='alert alert-warning text-center'>Aucune note n'a été saisie pour ce trimestre. Veuillez saisir des notes avant de calculer la moyenne.</div>";
-    } else {
-        // Si des notes sont présentes, calculer les moyennes
-        $query = "UPDATE eleve e
-                  JOIN (
-                      SELECT id_eleve, AVG(note) AS moyenne_calculee
-                      FROM note
-                      WHERE trimestre = :trimestre
-                      GROUP BY id_eleve
-                  ) moyennes
-                  ON e.id_eleve = moyennes.id_eleve
-                  SET e.moyenne = moyennes.moyenne_calculee
-                  WHERE e.id_classe = :classe_id";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':trimestre', $trimestre, PDO::PARAM_STR);
-        $stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        // Calcul des rangs avec gestion des ex æquo
-        // Étape 1 : Calcul des rangs avec gestion des ex æquo
-        $query = "
-            SET @rank = 0, @previousMoyenne = NULL, @tieCount = 1;
-
+    // Calculer les rangs en fonction des moyennes
+    $query = "
         UPDATE eleve e
         JOIN (
-            SELECT id_eleve, moyenne,
-                   @rank := IF(@previousMoyenne = moyenne, @rank, @rank + @tieCount) AS calculated_rank,
-                   @tieCount := IF(@previousMoyenne = moyenne, @tieCount + 1, 1),
-                   @previousMoyenne := moyenne
-            FROM (
-                SELECT id_eleve, moyenne
-                FROM eleve
-                WHERE id_classe = :classe_id
-                ORDER BY moyenne DESC, nom_eleve ASC, prenoms_eleve ASC
-            ) ranked
-        ) ranks ON e.id_eleve = ranks.id_eleve
-        SET e.rang = ranks.calculated_rank
-        WHERE e.id_classe = :classe_id";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        // Étape 2 : Ajouter "ex" uniquement aux élèves après le premier ex æquo
-        $query = "
-            UPDATE eleve e
-            JOIN (
-                SELECT id_eleve, moyenne,
-                       ROW_NUMBER() OVER (PARTITION BY moyenne ORDER BY nom_eleve ASC, prenoms_eleve ASC) AS row_num
-                FROM eleve
-                WHERE id_classe = :classe_id
-            ) ranked ON e.id_eleve = ranked.id_eleve
-            SET e.rang = CONCAT(e.rang, ' ex')
-            WHERE ranked.row_num > 1 AND e.id_classe = :classe_id";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        // Afficher un message de succès
-        echo "<div class='alert alert-success text-center'>Les moyennes et rangs ont été calculés avec succès.</div>";
-    }
+            SELECT id_eleve, 
+                   FIND_IN_SET(moyenne, (
+                       SELECT GROUP_CONCAT(DISTINCT moyenne ORDER BY moyenne DESC)
+                       FROM eleve
+                       WHERE id_classe = :classe_id
+                   )) AS rang_calcule
+            FROM eleve
+            WHERE id_classe = :classe_id
+        ) ranks
+        ON e.id_eleve = ranks.id_eleve
+        SET e.rang = ranks.rang_calcule";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
+    $stmt->execute();
 }
 
-  if ($classe_id && $trimestre) {
+
+    // Récupérer les élèves de la classe sélectionnée pour un trimestre spécifique
+    if ($classe_id && $trimestre) {
         $query = "SELECT c.nom_classe, m.nom_matiere
                   FROM classe AS c
                   JOIN matiere AS m ON m.id_matiere = (SELECT matiere_enseignee FROM professeur WHERE prenoms_professeur = :prenom_professeur AND classe_attribuee = :classe_id)
@@ -192,42 +159,28 @@ if (isset($_POST['calculer_moyenne']) && $classe_id && $trimestre) {
         $stmt->execute();
         $eleves = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
-    
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_all'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_all'])) {
     try {
-        // Vérifier s'il y a des enregistrements pour le trimestre donné
-        $query = "SELECT COUNT(*) FROM note WHERE trimestre = :trimestre";
+        // Remplacez 'table_notes' et 'trimestre' par vos noms réels
+        $query = "DELETE FROM note WHERE trimestre = :trimestre";
+        
+        // Spécifiez le trimestre à supprimer
+        $trimestre = $_POST['trimestre']; // Par exemple, changez selon vos besoins
+
         $stmt = $pdo->prepare($query);
-        $stmt->bindParam(':trimestre', $_POST['trimestre'], PDO::PARAM_STR);
-        $stmt->execute();
-        $count = $stmt->fetchColumn();
+        $stmt->bindParam(':trimestre', $trimestre, PDO::PARAM_STR);
+        
+        // Exécutez la suppression
+        if ($stmt->execute()) {
+            echo " <div class='alert alert-success text-center'> Tous les enregistrements pour le $trimestre ont été supprimés avec succès. </div> ";
+                   
 
-        if ($count == 0) {
-            // Aucune note à supprimer
-            echo "<div class='alert alert-warning text-center'>Aucun enregistrement trouvé pour le trimestre sélectionné.</div>";
         } else {
-            // Supprimer les enregistrements
-            $query = "DELETE FROM note WHERE trimestre = :trimestre";
-            $stmt = $pdo->prepare($query);
-            $stmt->bindParam(':trimestre', $_POST['trimestre'], PDO::PARAM_STR);
-
-            // Exécutez la suppression
-            if ($stmt->execute()) {
-                echo "<div class='alert alert-success text-center'>Tous les enregistrements pour le trimestre $trimestre ont été supprimés avec succès.</div>";
-
-                // Rediriger pour recharger la page
-                header("Refresh: 0; url=" . $_SERVER['PHP_SELF']);
-                exit();
-            } else {
-                echo "<div class='alert alert-danger text-center'>Une erreur s'est produite lors de la suppression.</div>";
-            }
+            echo " <div class='alert alert-danger text-center'>Une erreur s'est produite lors de la suppression. </div> ";
         }
     } catch (PDOException $e) {
         echo "Erreur : " . $e->getMessage();
-    }
-}
-
+    }}
 
 ?>
 
@@ -409,32 +362,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_all'])) {
                                     <?= isset($eleve['moyenne']) && $eleve['moyenne'] !== null ? number_format($eleve['moyenne'], 2) : 'Non calculée' ?>
                                 </td>
                                 <td>
-    <?php 
-        // Si le rang est inexistant, afficher "Non attribué"
-        $rang = isset($eleve['rang']) && $eleve['rang'] !== null ? $eleve['rang'] : 'Non attribué'; 
-        
-        if ($rang !== 'Non attribué') {
-            // Extraire le numéro du rang (au cas où "ex" serait déjà ajouté)
-            preg_match('/\d+/', $rang, $matches);
-            $numero_rang = $matches[0] ?? $rang;
-
-            // Déterminer le suffixe pour le rang
-            if ($numero_rang == 1) {
-                echo $numero_rang . "<sup>er</sup>";
-            } else {
-                echo $numero_rang . "<sup>ème</sup>";
-            }
-
-            // Vérifier et afficher "ex" s'il y a des ex æquo
-            if (strpos($rang, 'ex') !== false) {
-                echo " <span>ex</span>";
-            }
-        } else {
-            echo $rang;
-        }
-    ?>
-</td>
-
+                                    <?php 
+                                        $rang = isset($eleve['rang']) && $eleve['rang'] !== null ? $eleve['rang'] : 'Non attribué';
+                                        echo $rang !== 'Non attribué' ? $rang . "<sup>" . ($rang == 1 ? "er" : "ème") . "</sup>" : $rang;
+                                    ?>
+                                </td>
                                 <td>
                                     <input type="number" name="notes[<?= $eleve['id_eleve'] ?>]" 
                                            class="form-control" placeholder="Note" 
@@ -466,3 +398,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_all'])) {
     </script>
 </body>
 </html>
+
+
+// Fetch all students ordered by their averages
+$query = "
+    SELECT id_eleve, moyenne
+    FROM eleve
+    WHERE id_classe = :classe_id
+    ORDER BY moyenne DESC, id_eleve ASC";
+$stmt = $pdo->prepare($query);
+$stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
+$stmt->execute();
+$eleves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$rank = 1; // Initial rank
+$previous_average = null; // To store the previous average for comparison
+$rank_counter = 1; // Counter for students in the same rank group
+
+foreach ($eleves as $index => $eleve) {
+    // If the current average is different from the previous average, set the new rank
+    if ($eleve['moyenne'] != $previous_average) {
+        $rank = $index + 1; // New rank based on current index
+        $rank_counter = 1; // Reset the counter for the new rank group
+    } else {
+        // If the average is the same as the previous, they share the same rank
+        $rank_counter++;
+    }
+
+    // Update the rank for this student in the database
+    $query = "
+        UPDATE eleve
+        SET rang = :rang
+        WHERE id_eleve = :id_eleve";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(':rang', $rank, PDO::PARAM_INT);
+    $stmt->bindValue(':id_eleve', $eleve['id_eleve'], PDO::PARAM_INT);
+    $stmt->execute();
+
+    // Update the previous average for the next iteration
+    $previous_average = $eleve['moyenne'];
+}
+
+
+
+
+
+// Calcul des moyennes et des rangs
+if (isset($_POST['calculer_moyenne']) && $classe_id && $trimestre) {
+    // Calcul des moyennes pour chaque élève
+    $query = "UPDATE eleve e
+              JOIN (
+                  SELECT id_eleve, AVG(note) AS moyenne_calculee
+                  FROM note
+                  WHERE trimestre = :trimestre
+                  GROUP BY id_eleve
+              ) moyennes
+              ON e.id_eleve = moyennes.id_eleve
+              SET e.moyenne = moyennes.moyenne_calculee
+              WHERE e.id_classe = :classe_id";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(':trimestre', $trimestre, PDO::PARAM_STR);
+    $stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    // Calcul des rangs avec gestion des ex æquo
+// Étape 1 : Calcul des rangs avec gestion des ex æquo
+$query = "
+    SET @rank = 0, @previousMoyenne = NULL, @tieCount = 1;
+
+UPDATE eleve e
+JOIN (
+    SELECT id_eleve, moyenne,
+           @rank := IF(@previousMoyenne = moyenne, @rank, @rank + @tieCount) AS calculated_rank,
+           @tieCount := IF(@previousMoyenne = moyenne, @tieCount + 1, 1),
+           @previousMoyenne := moyenne
+    FROM (
+        SELECT id_eleve, moyenne
+        FROM eleve
+        WHERE id_classe = :classe_id
+        ORDER BY moyenne DESC, nom_eleve ASC, prenoms_eleve ASC
+    ) ranked
+) ranks ON e.id_eleve = ranks.id_eleve
+SET e.rang = ranks.calculated_rank
+WHERE e.id_classe = :classe_id";
+$stmt = $pdo->prepare($query);
+$stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
+$stmt->execute();
+
+// Étape 2 : Ajouter "ex" uniquement aux élèves après le premier ex æquo
+$query = "
+    UPDATE eleve e
+    JOIN (
+        SELECT id_eleve, moyenne,
+               ROW_NUMBER() OVER (PARTITION BY moyenne ORDER BY nom_eleve ASC, prenoms_eleve ASC) AS row_num
+        FROM eleve
+        WHERE id_classe = :classe_id
+    ) ranked ON e.id_eleve = ranked.id_eleve
+    SET e.rang = CONCAT(e.rang, ' ex')
+    WHERE ranked.row_num > 1 AND e.id_classe = :classe_id";
+$stmt = $pdo->prepare($query);
+$stmt->bindValue(':classe_id', $classe_id, PDO::PARAM_INT);
+$stmt->execute();
+
+
+}

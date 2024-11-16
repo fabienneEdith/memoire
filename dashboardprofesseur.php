@@ -131,6 +131,7 @@ session_start();
             max-width: 600px; /* Centering width */
             margin: auto;
         }
+        
 
         @media (max-width: 510px) {
              body {
@@ -203,7 +204,7 @@ session_start();
         </div>
     </div>
 
- <footer style="background-color:lavenderblush; margin-top: 100px;">
+ <footer style="background-color:lavenderblush; margin-top: 80px;">
         
             <p align="center" style="margin-left: 200px;">Droits d'auteur © 2024. <span style="color:red;">C J M </span>Tous droits réservés. </p>
         

@@ -150,33 +150,34 @@ $eleves = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Élèves</title>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- AOS (Animate On Scroll) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
     <style>
         body { font-family: Arial, sans-serif; background-color: #FFF8E1; }
         .custom-card { box-shadow: 0px 4px 8px rgba(139, 69, 19, 0.5); border-radius: 10px; padding: 20px; background-color: white; }
-        .btn-custom:hover { background-color: #8B4513; color:white }
-        .btn-custom{ background-color: #A52A2A; color:white; }
-        .btn-outline-primary:hover { background-color: antiquewhite; color: white; }
-        .table th, .table td { text-align: center; }
+        .btn-custom { background-color: #A52A2A; color: white; transition: background-color 0.3s ease; }
+        .btn-custom:hover { background-color: #8B4513; }
+        .table th, .table td { text-align: center; transition: transform 0.3s ease; }
         .search-container { margin-bottom: 20px; }
         .search-bar { width: 300px; border-radius: 20px; border: 1px solid #8B4513; padding: 8px 15px; }
-        .search-bar:focus { border-color: #8B3D14; }
-        th {
-            background-color: #8B4513;
-            color: white;
-        }
-        .table-bordered tbody tr:nth-child(even) {
-            background-color: #F4E1D2;
+        th { background-color: #8B4513; color: white; }
+        .table-bordered tbody tr:nth-child(even) { background-color: #F4E1D2; }
+        .table-bordered tbody tr { animation: fadeIn 0.5s ease-in; }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
-        @media (max-width: 510px){
-        #table {
-                width: 500px;
-            }
-              #table button{ height:30px;
-            width:30px }
-
+        @media (max-width: 510px) {
+            #table { width: 500px; }
+            #table button { height: 30px; width: 30px; }
         }
     </style>
 </head>
@@ -190,7 +191,7 @@ $eleves = $stmt->fetchAll();
         </a>
     </div>
 
-    <h2 class="text-center mb-4" style="color:#8B4513;">Gestion des Élèves</h2>
+    <h2 class="text-center mb-4" style="color:#8B4513;" data-aos="fade-up">Gestion des Élèves</h2>
 
     <!-- Search Bar -->
     <div class="search-container text-center">
@@ -198,8 +199,8 @@ $eleves = $stmt->fetchAll();
     </div>
     
     <!-- Add Student Form -->
-    <div class="custom-card mb-4">
-        <form method="POST">
+    <div class="custom-card mb-4" data-aos="fade-in">
+        <form method="POST" class="fade-in-form">
             <h5><i class="fas fa-plus-circle"></i> Ajouter un nouvel élève</h5>
             <div class="form-row">
                 <div class="col">
@@ -229,8 +230,8 @@ $eleves = $stmt->fetchAll();
     </div>
     
     <!-- Students List -->
-    <h5 class="mt-4"><i class="fas fa-list"></i> Liste des élèves</h5>
-    <div class="custom-card"id="table">
+    <h5 class="mt-4" data-aos="fade-up"><i class="fas fa-list"></i> Liste des élèves</h5>
+    <div class="custom-card" id="table">
         <table class="table table-border" id="studentsTable">
             <thead>
                 <tr>
@@ -243,7 +244,7 @@ $eleves = $stmt->fetchAll();
             </thead>
             <tbody>
                 <?php foreach ($eleves as $eleve): ?>
-                    <tr>
+                    <tr class="table-row">
                         <td><?= htmlspecialchars($eleve['nom_eleve']) ?></td>
                         <td><?= htmlspecialchars($eleve['prenoms_eleve']) ?></td>
                         <td><?= htmlspecialchars($eleve['nom_classe']) ?></td>
@@ -286,56 +287,57 @@ $eleves = $stmt->fetchAll();
                             <input type="text" class="form-control" name="prenoms_eleve" value="<?= htmlspecialchars($eleve['prenoms_eleve']) ?>" required>
                         </div>
                         <div class="col">
-                <!-- Classe dropdown -->
-                <select class="form-control" name="classe_eleve" required>
-                    <option value="">Sélectionner une classe</option>
-                    <?php foreach ($classes as $classe): ?>
-                        <option value="<?= $classe['id_classe'] ?>"><?= htmlspecialchars($classe['nom_classe']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+                            <!-- Classe dropdown -->
+                            <select class="form-control" name="classe_eleve" required>
+                                <option value="">Sélectionner une classe</option>
+                                <?php foreach ($classes as $classe): ?>
+                                    <option value="<?= $classe['id_classe'] ?>"><?= htmlspecialchars($classe['nom_classe']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label for="matricule_eleve">Matricule</label>
                             <input type="text" class="form-control" name="matricule_eleve" value="<?= htmlspecialchars($eleve['matricule_eleve']) ?>" required>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
-                        <button type="submit" name="modifier" class="btn btn-custom">Mettre à jour</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                        <button type="submit" name="modifier" class="btn btn-primary">Sauvegarder les modifications</button>
                     </div>
+
                 </form>
+                <br><br><br><br>
             </div>
         </div>
     </div>
     <?php endforeach; ?>
 
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.js"></script>
+
+    <script>
+        // Initialize AOS (Animate On Scroll)
+        AOS.init({
+            duration: 1200,
+        });
+
+        // Search filter functionality
+        document.getElementById("searchInput").addEventListener("keyup", function() {
+            var filter = this.value.toUpperCase();
+            var rows = document.querySelectorAll("#studentsTable tbody tr");
+            rows.forEach(function(row) {
+                var cells = row.getElementsByTagName("td");
+                var match = Array.from(cells).some(function(cell) {
+                    return cell.textContent.toUpperCase().includes(filter);
+                });
+                row.style.display = match ? "" : "none";
+            });
+        });
+    </script>
 </div>
-
-<!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script>
-    // Search Functionality
-document.getElementById('searchInput').addEventListener('input', function() {
-    let filter = this.value.toUpperCase();
-    let rows = document.getElementById('studentsTable').getElementsByTagName('tr');
-    for (let i = 1; i < rows.length; i++) {
-        let cells = rows[i].getElementsByTagName('td');
-        let found = false;
-        for (let j = 0; j < cells.length; j++) {
-            if (cells[j]) {
-                if (cells[j].innerText.toUpperCase().indexOf(filter) > -1) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-        rows[i].style.display = found ? "" : "none";
-    }
-});
-
-
-</script>
 </body>
 </html>
